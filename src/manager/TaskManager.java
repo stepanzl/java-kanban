@@ -7,6 +7,7 @@ import tasks.TaskStatus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TaskManager {
@@ -19,15 +20,15 @@ public class TaskManager {
 
     private Integer idCount = 0;
 
-    public ArrayList<Task> getAllTasks() {
+    public List<Task> getAllTasks() {
         return new ArrayList<>(tasks.values());
     }
 
-    public ArrayList<Epic> getAllEpics() {
+    public List<Epic> getAllEpics() {
         return new ArrayList<>(epics.values());
     }
 
-    public ArrayList<Subtask> getAllSubtasks() {
+    public List<Subtask> getAllSubtasks() {
         return new ArrayList<>(subtasks.values());
     }
 
@@ -92,9 +93,9 @@ public class TaskManager {
         updateEpicStatus(subtask.getEpicId());
     }
 
-    public ArrayList<Subtask> getAllSubtasksByEpicId(int id) {
-        ArrayList<Subtask> subtasksByEpic = new ArrayList<>();
-        ArrayList<Integer> subtaskIdsByEpic = epics.get(id).getSubtaskIds();
+    public List<Subtask> getAllSubtasksByEpicId(int id) {
+        List<Subtask> subtasksByEpic = new ArrayList<>();
+        List<Integer> subtaskIdsByEpic = epics.get(id).getSubtaskIds();
         for (int i = 0; i < subtaskIdsByEpic.size(); i++) {
             subtasksByEpic.add(subtasks.get(subtaskIdsByEpic.get(i)));
         }
@@ -102,7 +103,11 @@ public class TaskManager {
     }
 
     private void updateEpicStatus(int id) {
-        ArrayList<Subtask> subtaskByEpic = getAllSubtasksByEpicId(id);
+        List<Subtask> subtaskByEpic = getAllSubtasksByEpicId(id);
+        if (subtaskByEpic.isEmpty()) {
+            epics.get(id).setStatus(TaskStatus.NEW);
+            return;
+        }
         boolean foundNewSubtask = false;
         boolean foundDoneSubtask = false;
         boolean foundInProgressSubtask = false;
@@ -115,8 +120,7 @@ public class TaskManager {
                 foundNewSubtask = true;
             }
         }
-        if ((!foundNewSubtask && !foundInProgressSubtask && !foundDoneSubtask)
-                || (foundNewSubtask && !foundInProgressSubtask && !foundDoneSubtask)) {
+        if (foundNewSubtask && !foundInProgressSubtask && !foundDoneSubtask) {
             epics.get(id).setStatus(TaskStatus.NEW);
         } else if (!foundNewSubtask && !foundInProgressSubtask && foundDoneSubtask) {
             epics.get(id).setStatus(TaskStatus.DONE);
@@ -124,8 +128,6 @@ public class TaskManager {
             epics.get(id).setStatus(TaskStatus.IN_PROGRESS);
         }
     }
-
-
 }
 
 
