@@ -1,3 +1,4 @@
+import manager.Managers;
 import manager.TaskManager;
 import tasks.Epic;
 import tasks.Subtask;
@@ -8,7 +9,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        TaskManager manager = new TaskManager();
+        TaskManager manager = Managers.getDefault();
         Task task1 = new Task("Task1", "test task #1", TaskStatus.NEW);
         Task task2 = new Task("Task2", "test task #2", TaskStatus.DONE);
         manager.addTask(task1);
