@@ -3,7 +3,6 @@ package manager;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
-import tasks.TaskStatus;
 
 import java.util.List;
 
@@ -13,6 +12,12 @@ public interface TaskManager {
     List<Epic> getAllEpics();
 
     List<Subtask> getAllSubtasks();
+
+    Task getTask(int id);
+
+    Epic getEpic(int id);
+
+    Subtask getSubtask(int id);
 
     void removeAllTasks();
 
@@ -39,4 +44,7 @@ public interface TaskManager {
     List<Subtask> getAllSubtasksByEpicId(int id);
 
     void updateEpicStatus(int id);
+
+    List<Task> getHistory();
+
 }
