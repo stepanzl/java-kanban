@@ -1,4 +1,3 @@
-import manager.HistoryManager;
 import manager.Managers;
 import manager.TaskManager;
 import tasks.Epic;
@@ -35,11 +34,11 @@ public class Main {
         manager.getSubtask(subtask3.getId());
         manager.getEpic(epic1.getId());
         manager.getEpic(epic2.getId());
-        manager.getEpic(epic1.getId());
-        manager.getEpic(epic1.getId());
-        manager.getEpic(epic1.getId());
+        manager.getTask(task1.getId());
+        manager.getTask(task2.getId());
         manager.getEpic(epic1.getId());
         manager.getSubtask(subtask1.getId());
+
 
         printAllTasks(manager);
 
@@ -59,7 +58,7 @@ public class Main {
 
         System.out.println("\nRemoving tasks..");
         manager.removeTask(task1.getId());
-        manager.removeEpic(epic1.getId());
+        manager.removeTask(task2.getId());
 
         printAllTasks(manager);
 
