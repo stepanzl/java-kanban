@@ -1,4 +1,5 @@
 import manager.InMemoryTaskManager;
+import manager.Managers;
 import manager.TaskManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,13 +78,6 @@ class InMemoryTaskManagerTest {
         assertEquals(subtask.getId(), epic.getSubtaskIds().getFirst(), "Id подзадачи не совпадают.");
     }
 
-
-    //проверьте, что объект Epic нельзя добавить в самого себя в виде подзадачи
-    //проверьте, что объект Subtask нельзя сделать своим же эпиком
-
-    //тестов нет, т.к. для добавления и изменения подзадач используются методы addSubtask(Subtask subtask)
-    // и updateSubtask(Subtask subtask), которые не могут принять объект Epic на вход
-
     @Test
     void ShouldNotConflictBetweenSetIdAndGeneratedId() {
         Task task1 = new Task("Test task 1", "Test task 1 description", TaskStatus.NEW);
@@ -132,6 +126,10 @@ class InMemoryTaskManagerTest {
         Task task3 = new Task("Test task #3", "Test task #3 description", TaskStatus.NEW);
         taskManager.addTask(task3);
 
+        taskManager.getTask(task1.getId());
+        taskManager.getTask(task2.getId());
+        taskManager.getTask(task3.getId());
+
         taskManager.removeTask(task2.getId());
         final List<Task> tasks = taskManager.getAllTasks();
 
@@ -159,12 +157,15 @@ class InMemoryTaskManagerTest {
     void ShouldRemoveEpicAndAllItsSubtasks() {
         Epic epic = new Epic("Test Epic", "Test Epic description");
         taskManager.addEpic(epic);
+        taskManager.getEpic(epic.getId());
         Subtask subtask1 = new Subtask("Test subtask #1", "Test subtask #1 description",
                 TaskStatus.NEW, epic.getId());
         taskManager.addSubtask(subtask1);
+        taskManager.getSubtask(subtask1.getId());
         Subtask subtask2 = new Subtask("Test subtask #2", "Test subtask #2 description",
                 TaskStatus.NEW, epic.getId());
         taskManager.addSubtask(subtask2);
+        taskManager.getSubtask(subtask2.getId());
 
         taskManager.removeEpic(epic.getId());
 
