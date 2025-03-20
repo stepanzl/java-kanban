@@ -42,4 +42,5 @@ class InMemoryHistoryManagerTest {
         assertEquals(task1, history.get(1), "Задача #1 не должна быть удалена");
         assertEquals(task3, history.get(0), "Задача #3 не должна быть удалена");
     }
+
 }

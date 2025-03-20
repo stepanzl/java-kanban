@@ -6,6 +6,7 @@ public class Node {
     Task task;
     Node next;
     Node prev;
+
     Node(Node prev, Task task, Node next) {
         this.task = task;
         this.next = next;
