@@ -6,7 +6,9 @@ import tasks.TaskStatus;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class InMemoryHistoryManagerTest {
 
@@ -39,8 +41,20 @@ class InMemoryHistoryManagerTest {
         final List<Task> history = historyManager.getHistory();
 
         assertEquals(2, history.size(), "Некорректное кол-во задач");
-        assertEquals(task1, history.get(1), "Задача #1 не должна быть удалена");
-        assertEquals(task3, history.get(0), "Задача #3 не должна быть удалена");
+        assertEquals(task1, history.get(0), "Задача #1 не должна быть удалена");
+        assertEquals(task3, history.get(1), "Задача #3 не должна быть удалена");
     }
 
+    @Test
+    void ShouldNotThrowNullPointerException() {
+        Task task1 = new Task("Test task #1", "Test task #1 description", TaskStatus.NEW);
+        task1.setId(0);
+        historyManager.add(task1);
+        historyManager.remove(task1.getId());
+
+        historyManager.remove(task1.getId());
+
+        assertDoesNotThrow(() -> historyManager.remove(task1.getId()),
+                "Повторное удаление задачи не должно вызывать NullPointerException");
+    }
 }
