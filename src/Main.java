@@ -21,11 +21,10 @@ public class Main {
         manager.addSubtask(subtask1);
         Subtask subtask2 = new Subtask("Subtask2", "test subtask #2", TaskStatus.IN_PROGRESS, epicId1);
         manager.addSubtask(subtask2);
+        Subtask subtask3 = new Subtask("Subtask3", "test subtask #3", TaskStatus.DONE, epicId1);
+        manager.addSubtask(subtask3);
         Epic epic2 = new Epic("Epic2", "test epic #2");
         manager.addEpic(epic2);
-        final int epicId2 = epic2.getId();
-        Subtask subtask3 = new Subtask("Subtask3", "test subtask #3", TaskStatus.DONE, epicId2);
-        manager.addSubtask(subtask3);
 
         manager.getTask(task1.getId());
         manager.getTask(task2.getId());
@@ -39,26 +38,15 @@ public class Main {
         manager.getEpic(epic1.getId());
         manager.getSubtask(subtask1.getId());
 
-
         printAllTasks(manager);
 
-        System.out.println("\nChanging statuses..");
-        task1.setStatus(TaskStatus.DONE);
-        manager.updateTask(task1);
-        task2.setStatus(TaskStatus.IN_PROGRESS);
-        manager.updateTask(task2);
-        subtask1.setStatus(TaskStatus.DONE);
-        manager.updateSubtask(subtask1);
-        subtask2.setStatus(TaskStatus.DONE);
-        manager.updateSubtask(subtask2);
-        subtask3.setStatus(TaskStatus.IN_PROGRESS);
-        manager.updateSubtask(subtask3);
-
-        printAllTasks(manager);
-
-        System.out.println("\nRemoving tasks..");
+        System.out.println("\nRemoving task1..");
         manager.removeTask(task1.getId());
-        manager.removeTask(task2.getId());
+
+        printAllTasks(manager);
+
+        System.out.println("\nRemoving epic..");
+        manager.removeEpic(epic1.getId());
 
         printAllTasks(manager);
 
