@@ -9,7 +9,11 @@ public class Epic extends Task {
 
     public Epic(String name, String description) {
         super(name, description, TaskStatus.NEW);
+    }
 
+    public Epic(Epic other) {
+        super(other);
+        this.subtaskIds.addAll(other.subtaskIds);
     }
 
     public List<Integer> getSubtaskIds() {
