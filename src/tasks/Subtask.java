@@ -13,7 +13,6 @@ public class Subtask extends Task {
         super(id, name, description, status);
         this.epicId = epicId;
     }
-
     public int getEpicId() {
         return epicId;
     }
