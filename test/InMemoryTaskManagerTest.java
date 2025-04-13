@@ -73,16 +73,9 @@ class InMemoryTaskManagerTest {
         assertNotNull(subtasks, "Подзадачи не возвращаются.");
         assertEquals(1, subtasks.size(), "Неверное количество подзадач.");
         assertEquals(subtask, subtasks.getFirst(), "Подзадачи не совпадают.");
-        assertEquals(1, epic.getSubtaskIds().size(), "Неверное количество Id подзадач в эпике.");
-        assertEquals(subtask.getId(), epic.getSubtaskIds().getFirst(), "Id подзадачи не совпадают.");
+        assertEquals(1, taskManager.getEpic(epic.getId()).getSubtaskIds().size(), "Неверное количество Id подзадач в эпике.");
+        assertEquals(subtask.getId(), taskManager.getEpic(epic.getId()).getSubtaskIds().getFirst(), "Id подзадачи не совпадают.");
     }
-
-
-    //проверьте, что объект Epic нельзя добавить в самого себя в виде подзадачи
-    //проверьте, что объект Subtask нельзя сделать своим же эпиком
-
-    //тестов нет, т.к. для добавления и изменения подзадач используются методы addSubtask(Subtask subtask)
-    // и updateSubtask(Subtask subtask), которые не могут принять объект Epic на вход
 
     @Test
     void ShouldNotConflictBetweenSetIdAndGeneratedId() {
@@ -93,7 +86,7 @@ class InMemoryTaskManagerTest {
 
         taskManager.addTask(task2);
 
-        assertNotEquals(task1.getId(), task2.getId(), "Задаче 2 присвоен неверный Id");
+        assertNotEquals(taskManager.getTask(0).getId(), taskManager.getTask(1).getId(), "Задаче 2 присвоен неверный Id");
     }
 
     @Test
@@ -107,7 +100,18 @@ class InMemoryTaskManagerTest {
         assertEquals(task.getName(), savedTask.getName(), "Поля name не совпадают.");
         assertEquals(task.getDescription(), savedTask.getDescription(), "Поля description не совпадают.");
         assertEquals(task.getStatus(), savedTask.getStatus(), "Поля status не совпадают.");
+    }
 
+    @Test
+    void ShouldNotChangeIdWhenAddedToManager() {
+        task = new Task("Test task 1", "Test task 1 description", TaskStatus.NEW);
+        taskManager.addTask(task);
+        int taskId = task.getId();
+        task.setId(10);
+
+        final Task savedTask = taskManager.getTask(taskId);
+
+        assertNotEquals(10, savedTask.getId(), "Сеттер не должен менять данные внутри менеджера");
     }
 
     @Test
@@ -132,6 +136,10 @@ class InMemoryTaskManagerTest {
         Task task3 = new Task("Test task #3", "Test task #3 description", TaskStatus.NEW);
         taskManager.addTask(task3);
 
+        taskManager.getTask(task1.getId());
+        taskManager.getTask(task2.getId());
+        taskManager.getTask(task3.getId());
+
         taskManager.removeTask(task2.getId());
         final List<Task> tasks = taskManager.getAllTasks();
 
@@ -144,35 +152,98 @@ class InMemoryTaskManagerTest {
     void ShouldRemoveAllTasks() {
         Task task1 = new Task("Test task #1", "Test task #1 description", TaskStatus.NEW);
         taskManager.addTask(task1);
+        taskManager.getTask(task1.getId());
         Task task2 = new Task("Test task #2", "Test task #2 description", TaskStatus.NEW);
         taskManager.addTask(task2);
+        taskManager.getTask(task2.getId());
         Task task3 = new Task("Test task #3", "Test task #3 description", TaskStatus.NEW);
         taskManager.addTask(task3);
+        taskManager.getTask(task3.getId());
 
         taskManager.removeAllTasks();
         final List<Task> tasks = taskManager.getAllTasks();
+        final List<Task> historyList = taskManager.getHistory();
 
-        assertEquals(0, tasks.size(), "Задачи не были удалена");
+        assertEquals(0, tasks.size(), "Задачи не были удалены");
+        assertEquals(0, historyList.size(), "Просмотры в истории не были удалены");
     }
 
     @Test
     void ShouldRemoveEpicAndAllItsSubtasks() {
         Epic epic = new Epic("Test Epic", "Test Epic description");
         taskManager.addEpic(epic);
+        taskManager.getEpic(epic.getId());
         Subtask subtask1 = new Subtask("Test subtask #1", "Test subtask #1 description",
                 TaskStatus.NEW, epic.getId());
         taskManager.addSubtask(subtask1);
+        taskManager.getSubtask(subtask1.getId());
         Subtask subtask2 = new Subtask("Test subtask #2", "Test subtask #2 description",
                 TaskStatus.NEW, epic.getId());
         taskManager.addSubtask(subtask2);
+        taskManager.getSubtask(subtask2.getId());
 
         taskManager.removeEpic(epic.getId());
 
         final List<Epic> epics = taskManager.getAllEpics();
         final List<Subtask> subtasks = taskManager.getAllSubtasks();
+        final List<Task> historyList = taskManager.getHistory();
+
 
         assertEquals(0, epics.size(), "Эпик не был удален");
         assertEquals(0, subtasks.size(), "Подзадачи не были удалены");
+        assertEquals(0, historyList.size(), "Просмотры в истории не были удалены");
+
     }
 
+    @Test
+    void ShouldRemoveAllEpicsAndTheirsSubtasks() {
+        Epic epic1 = new Epic("Epic1", "test epic #1");
+        taskManager.addEpic(epic1);
+        taskManager.getEpic(epic1.getId());
+        final int epicId1 = epic1.getId();
+        Subtask subtask1 = new Subtask("Subtask1", "test subtask #1", TaskStatus.NEW, epicId1);
+        taskManager.addSubtask(subtask1);
+        taskManager.getSubtask(subtask1.getId());
+        Subtask subtask2 = new Subtask("Subtask2", "test subtask #2", TaskStatus.IN_PROGRESS, epicId1);
+        taskManager.addSubtask(subtask2);
+        taskManager.getSubtask(subtask2.getId());
+        Epic epic2 = new Epic("Epic2", "test epic #2");
+        taskManager.addEpic(epic2);
+        taskManager.getEpic(epic2.getId());
+
+        taskManager.removeAllEpics();
+        final List<Epic> epics = taskManager.getAllEpics();
+        final List<Subtask> subtasks = taskManager.getAllSubtasks();
+        final List<Task> historyList = taskManager.getHistory();
+
+        assertEquals(0, epics.size(), "Эпики не были удалены");
+        assertEquals(0, subtasks.size(), "Подзадачи не были удалены");
+        assertEquals(0, historyList.size(), "Просмотры в истории не были удалены");
+    }
+
+    @Test
+    void removeAllSubtasks() {
+        Epic epic1 = new Epic("Epic1", "test epic #1");
+        taskManager.addEpic(epic1);
+        taskManager.getEpic(epic1.getId());
+        final int epicId1 = epic1.getId();
+        Subtask subtask1 = new Subtask("Subtask1", "test subtask #1", TaskStatus.NEW, epicId1);
+        taskManager.addSubtask(subtask1);
+        taskManager.getSubtask(subtask1.getId());
+        Subtask subtask2 = new Subtask("Subtask2", "test subtask #2", TaskStatus.IN_PROGRESS, epicId1);
+        taskManager.addSubtask(subtask2);
+        taskManager.getSubtask(subtask2.getId());
+        Epic epic2 = new Epic("Epic2", "test epic #2");
+        taskManager.addEpic(epic2);
+        taskManager.getEpic(epic2.getId());
+
+        taskManager.removeAllSubtasks();
+        final List<Epic> epics = taskManager.getAllEpics();
+        final List<Subtask> subtasks = taskManager.getAllSubtasks();
+        final List<Task> historyList = taskManager.getHistory();
+
+        assertEquals(2, epics.size(), "Эпики не должны быть удалены");
+        assertEquals(0, subtasks.size(), "Подзадачи не были удалены");
+        assertEquals(2, historyList.size(), "Просмотры подзадач в истории не были удалены");
+    }
 }
