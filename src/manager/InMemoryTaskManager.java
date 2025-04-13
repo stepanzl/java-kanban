@@ -22,6 +22,21 @@ public class InMemoryTaskManager implements TaskManager {
 
     private final HistoryManager historyManager = Managers.getDefaultHistory();
 
+    protected Map<Integer, Task> getTasks() {
+        return tasks;
+    }
+
+    protected Map<Integer, Epic> getEpics() {
+        return epics;
+    }
+
+    protected Map<Integer, Subtask> getSubtasks() {
+        return subtasks;
+    }
+
+    protected void setIdCount(Integer idCount) {
+        this.idCount = idCount;
+    }
 
     @Override
     public List<Task> getAllTasks() {
