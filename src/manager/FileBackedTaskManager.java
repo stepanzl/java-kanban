@@ -47,6 +47,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
         int maxId = 0;
 
+        if (!file.exists()) {
+            throw new ManagerSaveException("Файл не существует: " + file.getPath());
+        }
+
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             br.readLine();
@@ -65,11 +69,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
     private void addTaskByType(Task task) {
         if (task instanceof Epic) {
-            addEpic((Epic) task);
+            getEpics().put(task.getId(), (Epic) task);
         } else if (task instanceof Subtask) {
-            addSubtask((Subtask) task);
+            getSubtasks().put(task.getId(), (Subtask) task);
+            int epicId = ((Subtask) task).getEpicId();
+            getEpics().get(epicId).getSubtaskIds().add(task.getId());
+            updateEpicStatus(epicId);
         } else {
-            addTask(task);
+            getTasks().put(task.getId(), task);
         }
     }
 
@@ -172,6 +179,51 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     public void removeSubtask(int id) {
         super.removeSubtask(id);
         save();
+    }
+
+    public static void main(String[] args) {
+        File file = new File("tasks.csv");
+        file.deleteOnExit();
+
+        FileBackedTaskManager manager1 = new FileBackedTaskManager(file);
+
+        Task task1 = new Task("Task 1", "test task #1", TaskStatus.NEW);
+        manager1.addTask(task1);
+        Task task2 = new Task("Task 2", "test task #2", TaskStatus.IN_PROGRESS);
+        manager1.addTask(task2);
+        Task task3 = new Task("Task 3", "test task #3", TaskStatus.DONE);
+        manager1.addTask(task3);
+        Epic epic1 = new Epic("Epic 1", "test epic #1");
+        manager1.addEpic(epic1);
+        final int epicId1 = epic1.getId();
+        Subtask subtask1 = new Subtask("Subtask1", "test subtask #1", TaskStatus.NEW, epicId1);
+        manager1.addSubtask(subtask1);
+        Subtask subtask2 = new Subtask("Subtask2", "test subtask #2", TaskStatus.IN_PROGRESS, epicId1);
+        manager1.addSubtask(subtask2);
+        Epic epic2 = new Epic("Epic 2", "test epic #2");
+        manager1.addEpic(epic2);
+
+        FileBackedTaskManager manager2 = FileBackedTaskManager.loadFromFile(file);
+
+        System.out.println("=== Tasks ===");
+        manager1.getAllTasks().forEach(System.out::println);
+        System.out.println("--- Loaded ---");
+        manager2.getAllTasks().forEach(System.out::println);
+        System.out.println(manager1.getAllTasks().equals(manager2.getAllTasks()) ? "Tasks match" : "Tasks do not match");
+        System.out.println();
+
+        System.out.println("=== Epics ===");
+        manager1.getAllEpics().forEach(System.out::println);
+        System.out.println("--- Loaded ---");
+        manager2.getAllEpics().forEach(System.out::println);
+        System.out.println(manager1.getAllEpics().equals(manager2.getAllEpics()) ? "Epics match" : "Epics do not match");
+        System.out.println();
+
+        System.out.println("=== Subtasks ===");
+        manager2.getAllSubtasks().forEach(System.out::println);
+        System.out.println("--- Loaded ---");
+        manager2.getAllSubtasks().forEach(System.out::println);
+        System.out.println(manager1.getAllSubtasks().equals(manager2.getAllSubtasks()) ? "Subtasks match" : "Subtasks do not match");
     }
 
 }
