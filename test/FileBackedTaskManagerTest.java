@@ -10,32 +10,36 @@ import tasks.TaskStatus;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
-class FileBackedTaskManagerTest {
+class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     private File tempFile;
-    private FileBackedTaskManager manager;
 
-    @BeforeEach
-    void beforeEach() throws IOException {
-        tempFile = File.createTempFile("task_manager", ".csv");
-        manager = new FileBackedTaskManager(tempFile);
+    @Override
+    protected FileBackedTaskManager createManager() {
+        try {
+            tempFile = File.createTempFile("task_manager", ".csv");
+        } catch (IOException e) {
+            fail("Ошибка при создании временного файла");
+        }
+        return new FileBackedTaskManager(tempFile);
     }
 
     @AfterEach
-    void afterEach() {
+    void tearDown() {
         tempFile.delete();
     }
 
     @Test
     void shouldSaveAndLoadEmptyFileCorrectly() throws IOException {
-        manager.removeAllTasks(); // для вызова save()
+        manager.removeAllTasks(); // вызываем save()
         List<String> lines = Files.readAllLines(tempFile.toPath());
         assertEquals(1, lines.size());
-        assertEquals("id,type,name,status,description,epic", lines.get(0));
+        assertEquals("id,type,name,status,description,duration,startTime,epic", lines.get(0));
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
@@ -53,7 +57,7 @@ class FileBackedTaskManagerTest {
 
         List<String> lines = Files.readAllLines(tempFile.toPath());
 
-        assertEquals(3, lines.size());
+        assertEquals(3, lines.size()); // заголовок + 2 задачи
         assertTrue(lines.get(1).contains("Task1"));
         assertTrue(lines.get(2).contains("Task2"));
     }
@@ -73,7 +77,7 @@ class FileBackedTaskManagerTest {
     }
 
     @Test
-    void shouldRestoreSubtaskIdsInEpicsAfterLoadingFromFile() throws IOException {
+    void shouldRestoreSubtaskIdsInEpicsAfterLoadingFromFile() {
         Epic epic = new Epic("Epic1", "Test epic #1");
         manager.addEpic(epic);
 
@@ -113,6 +117,24 @@ class FileBackedTaskManagerTest {
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
         assertTrue(loadedManager.getAllTasks().isEmpty());
+    }
+
+    @Test
+    void shouldSaveAndLoadTimeFieldsCorrectly() {
+        Epic epic = new Epic("Epic1", "test epic #1");
+        manager.addEpic(epic);
+
+        Subtask sub = new Subtask("Sub", "desc", TaskStatus.NEW, Duration.ofMinutes(45),
+                LocalDateTime.of(2025, 5, 1, 10, 0), epic.getId());
+        manager.addSubtask(sub);
+
+        // Пересоздаем менеджер
+        FileBackedTaskManager loaded = FileBackedTaskManager.loadFromFile(tempFile);
+        Epic loadedEpic = loaded.getEpic(epic.getId());
+
+        assertEquals(LocalDateTime.of(2025, 5, 1, 10, 0), loadedEpic.getStartTime());
+        assertEquals(LocalDateTime.of(2025, 5, 1, 10, 45), loadedEpic.getEndTime());
+        assertEquals(Duration.ofMinutes(45), loadedEpic.getDuration());
     }
 
 }

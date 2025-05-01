@@ -1,14 +1,8 @@
-import manager.Managers;
-import manager.TaskManager;
-import tasks.Epic;
-import tasks.Subtask;
-import tasks.Task;
-import tasks.TaskStatus;
-
 public class Main {
 
     public static void main(String[] args) {
 
+        /*
         TaskManager manager = Managers.getDefault();
         Task task1 = new Task("Task1", "test task #1", TaskStatus.NEW);
         Task task2 = new Task("Task2", "test task #2", TaskStatus.DONE);
@@ -70,6 +64,8 @@ public class Main {
             System.out.println(task);
         }
 
+
+         */
 
     }
 }
