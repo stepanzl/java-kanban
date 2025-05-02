@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -410,7 +411,21 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertDoesNotThrow(() -> manager.addTask(adjacentTask));
     }
 
+    @Test
+    void getPrioritizedTasksTest() {
+        Task task1 = new Task("Task 1", "desc 1", TaskStatus.NEW, Duration.ofMinutes(30),
+                LocalDateTime.of(2025, 5, 2, 10, 0));
+        Task task2 = new Task("Task 2", "desc 2", TaskStatus.NEW, Duration.ofMinutes(45),
+                LocalDateTime.of(2025, 5, 2, 9, 0));
+        Task task3 = new Task("Task 3", "task without time", TaskStatus.NEW, null, null);
+        manager.addTask(task1);
+        manager.addTask(task2);
+        manager.addTask(task3);
 
+        List<Task> prioritized = manager.getPrioritizedTasks();
 
-
+        assertFalse(prioritized.contains(task3), "Задача без времени не должна быть в списке");
+        assertEquals(List.of(task2, task1), prioritized,
+                "Задачи должны быть отсортированы по времени начала");
+    }
 }

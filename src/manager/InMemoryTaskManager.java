@@ -238,8 +238,12 @@ public class InMemoryTaskManager implements TaskManager {
             return;
         }
 
-        long newCount = subtasks.stream().filter(s -> s.getStatus() == TaskStatus.NEW).count();
-        long doneCount = subtasks.stream().filter(s -> s.getStatus() == TaskStatus.DONE).count();
+        long newCount = subtasks.stream()
+                .filter(s -> s.getStatus() == TaskStatus.NEW)
+                .count();
+        long doneCount = subtasks.stream()
+                .filter(s -> s.getStatus() == TaskStatus.DONE)
+                .count();
 
         if (doneCount == subtasks.size()) {
             epic.setStatus(TaskStatus.DONE);
@@ -306,9 +310,14 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private boolean isOverlapping(Task t1, Task t2) {
+        if (t1.getStartTime() == null || t1.getEndTime() == null
+                || t2.getStartTime() == null || t2.getEndTime() == null) {
+            return false;
+        }
         return t1.getStartTime().isBefore(t2.getEndTime())
                 && t2.getStartTime().isBefore(t1.getEndTime());
     }
+
 
     private boolean hasOverlaps(Task newTask) {
         return getPrioritizedTasks().stream()
