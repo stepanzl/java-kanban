@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeSet;
 
 public class InMemoryTaskManager implements TaskManager {
@@ -63,30 +64,30 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task getTask(int id) {
+    public Optional<Task> getTask(int id) {
         Task task = tasks.get(id);
         if (task != null) {
             historyManager.add(task);
         }
-        return task;
+        return Optional.ofNullable(task);
     }
 
     @Override
-    public Epic getEpic(int id) {
+    public Optional<Epic> getEpic(int id) {
         Epic epic = epics.get(id);
         if (epic != null) {
             historyManager.add(epic);
         }
-        return epic;
+        return Optional.ofNullable(epic);
     }
 
     @Override
-    public Subtask getSubtask(int id) {
+    public Optional<Subtask> getSubtask(int id) {
         Subtask subtask = subtasks.get(id);
         if (subtask != null) {
             historyManager.add(subtask);
         }
-        return subtask;
+        return Optional.ofNullable(subtask);
     }
 
     @Override

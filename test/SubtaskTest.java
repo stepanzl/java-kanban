@@ -6,7 +6,7 @@ import tasks.Epic;
 import tasks.Subtask;
 import tasks.TaskStatus;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SubtaskTest {
 

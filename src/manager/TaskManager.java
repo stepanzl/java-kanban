@@ -5,6 +5,7 @@ import tasks.Subtask;
 import tasks.Task;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskManager {
     List<Task> getAllTasks();
@@ -13,11 +14,11 @@ public interface TaskManager {
 
     List<Subtask> getAllSubtasks();
 
-    Task getTask(int id);
+    Optional<Task> getTask(int id);
 
-    Epic getEpic(int id);
+    Optional<Epic> getEpic(int id);
 
-    Subtask getSubtask(int id);
+    Optional<Subtask> getSubtask(int id);
 
     void removeAllTasks();
 

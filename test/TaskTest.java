@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import tasks.Task;
 import tasks.TaskStatus;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TaskTest {
 

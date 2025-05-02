@@ -1,6 +1,6 @@
 import manager.FileBackedTaskManager;
+import manager.ManagerSaveException;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
 import tasks.Subtask;
@@ -13,8 +13,13 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     private File tempFile;
@@ -39,7 +44,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         manager.removeAllTasks(); // вызываем save()
         List<String> lines = Files.readAllLines(tempFile.toPath());
         assertEquals(1, lines.size());
-        assertEquals("id,type,name,status,description,duration,startTime,epic", lines.get(0));
+        assertEquals("id,type,name,status,description,duration,startTime,epic", lines.getFirst());
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
@@ -72,8 +77,8 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
         assertEquals(2, loadedManager.getAllTasks().size());
-        assertEquals(task1.getName(), loadedManager.getTask(task1.getId()).getName());
-        assertEquals(task2.getDescription(), loadedManager.getTask(task2.getId()).getDescription());
+        assertEquals(task1.getName(), loadedManager.getTask(task1.getId()).orElseThrow().getName());
+        assertEquals(task2.getDescription(), loadedManager.getTask(task2.getId()).orElseThrow().getDescription());
     }
 
     @Test
@@ -87,9 +92,8 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         manager.addSubtask(subtask2);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-        Epic loadedEpic = loadedManager.getEpic(epic.getId());
+        Epic loadedEpic = loadedManager.getEpic(epic.getId()).orElseThrow();
 
-        assertNotNull(loadedEpic);
         List<Integer> subtaskIds = loadedEpic.getSubtaskIds();
 
         assertEquals(2, subtaskIds.size());
@@ -117,6 +121,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
         assertTrue(loadedManager.getAllTasks().isEmpty());
+        assertTrue(loadedManager.getTask(task.getId()).isEmpty());
     }
 
     @Test
@@ -128,13 +133,36 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
                 LocalDateTime.of(2025, 5, 1, 10, 0), epic.getId());
         manager.addSubtask(sub);
 
-        // Пересоздаем менеджер
         FileBackedTaskManager loaded = FileBackedTaskManager.loadFromFile(tempFile);
-        Epic loadedEpic = loaded.getEpic(epic.getId());
+        Epic loadedEpic = loaded.getEpic(epic.getId()).orElseThrow();
 
         assertEquals(LocalDateTime.of(2025, 5, 1, 10, 0), loadedEpic.getStartTime());
         assertEquals(LocalDateTime.of(2025, 5, 1, 10, 45), loadedEpic.getEndTime());
         assertEquals(Duration.ofMinutes(45), loadedEpic.getDuration());
     }
 
+    @Test
+    void shouldLoadEmptyEpicCorrectly() {
+        Epic epic = new Epic("Empty Epic", "No subtasks");
+        manager.addEpic(epic);
+
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
+        Optional<Epic> loadedEpic = loadedManager.getEpic(epic.getId());
+
+        assertTrue(loadedEpic.isPresent());
+        assertEquals(epic.getName(), loadedEpic.get().getName());
+        assertTrue(loadedEpic.get().getSubtaskIds().isEmpty());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFileNotExists() {
+        File nonExistentFile = new File("nonexistent_file.csv");
+
+        ManagerSaveException exception = assertThrows(
+                ManagerSaveException.class,
+                () -> FileBackedTaskManager.loadFromFile(nonExistentFile)
+        );
+
+        assertEquals("Файл не существует: nonexistent_file.csv", exception.getMessage());
+    }
 }
