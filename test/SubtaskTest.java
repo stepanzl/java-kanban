@@ -20,15 +20,15 @@ class SubtaskTest {
     @Test
     void ShouldReturnTrueForEqualsWhenIdsAreSame() {
         Epic epic1 = new Epic("Test epic 1", "Test epic 1 description");
-        taskManager.addEpic(epic1);
+        taskManager.createEpic(epic1);
         Subtask subtask1 = new Subtask("Test subtask 1", "Test subtask 1 description", TaskStatus.NEW,
                 epic1.getId());
-        taskManager.addSubtask(subtask1);
+        taskManager.createSubtask(subtask1);
         Epic epic2 = new Epic("Test epic 2", "Test epic 2 description");
-        taskManager.addEpic(epic2);
+        taskManager.createEpic(epic2);
         Subtask subtask2 = new Subtask("Test subtask 2", "Test subtask 2 description", TaskStatus.NEW,
                 epic2.getId());
-        taskManager.addSubtask(subtask2);
+        taskManager.createSubtask(subtask2);
 
         subtask2.setId(subtask1.getId());
 

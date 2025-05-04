@@ -48,17 +48,17 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
-        assertTrue(loadedManager.getAllTasks().isEmpty());
-        assertTrue(loadedManager.getAllEpics().isEmpty());
-        assertTrue(loadedManager.getAllSubtasks().isEmpty());
+        assertTrue(loadedManager.getTasks().isEmpty());
+        assertTrue(loadedManager.getEpics().isEmpty());
+        assertTrue(loadedManager.getSubtasks().isEmpty());
     }
 
     @Test
     void shouldSaveMultipleTasksToFile() throws IOException {
         Task task1 = new Task("Task1", "Description1", TaskStatus.NEW);
         Task task2 = new Task("Task2", "Description2", TaskStatus.DONE);
-        manager.addTask(task1);
-        manager.addTask(task2);
+        manager.createTask(task1);
+        manager.createTask(task2);
 
         List<String> lines = Files.readAllLines(tempFile.toPath());
 
@@ -71,28 +71,28 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     void shouldLoadMultipleTasksFromFile() {
         Task task1 = new Task("Task1", "Description1", TaskStatus.NEW);
         Task task2 = new Task("Task2", "Description2", TaskStatus.DONE);
-        manager.addTask(task1);
-        manager.addTask(task2);
+        manager.createTask(task1);
+        manager.createTask(task2);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
 
-        assertEquals(2, loadedManager.getAllTasks().size());
-        assertEquals(task1.getName(), loadedManager.getTask(task1.getId()).orElseThrow().getName());
-        assertEquals(task2.getDescription(), loadedManager.getTask(task2.getId()).orElseThrow().getDescription());
+        assertEquals(2, loadedManager.getTasks().size());
+        assertEquals(task1.getName(), loadedManager.getTaskById(task1.getId()).orElseThrow().getName());
+        assertEquals(task2.getDescription(), loadedManager.getTaskById(task2.getId()).orElseThrow().getDescription());
     }
 
     @Test
     void shouldRestoreSubtaskIdsInEpicsAfterLoadingFromFile() {
         Epic epic = new Epic("Epic1", "Test epic #1");
-        manager.addEpic(epic);
+        manager.createEpic(epic);
 
         Subtask subtask1 = new Subtask("Subtask1", "Test subtask #1", TaskStatus.NEW, epic.getId());
         Subtask subtask2 = new Subtask("Subtask2", "Test subtask #2", TaskStatus.DONE, epic.getId());
-        manager.addSubtask(subtask1);
-        manager.addSubtask(subtask2);
+        manager.createSubtask(subtask1);
+        manager.createSubtask(subtask2);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-        Epic loadedEpic = loadedManager.getEpic(epic.getId()).orElseThrow();
+        Epic loadedEpic = loadedManager.getEpicById(epic.getId()).orElseThrow();
 
         List<Integer> subtaskIds = loadedEpic.getSubtaskIds();
 
@@ -104,11 +104,11 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     @Test
     void shouldGenerateNewIdsAfterLoading() {
         Task task1 = new Task("Task1", "Desc", TaskStatus.NEW);
-        manager.addTask(task1);
+        manager.createTask(task1);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
         Task task2 = new Task("Task2", "Desc", TaskStatus.NEW);
-        loadedManager.addTask(task2);
+        loadedManager.createTask(task2);
 
         assertNotEquals(task1.getId(), task2.getId());
     }
@@ -116,25 +116,25 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     @Test
     void shouldNotLoadDeletedTasks() {
         Task task = new Task("Task", "Desc", TaskStatus.NEW);
-        manager.addTask(task);
-        manager.removeTask(task.getId());
+        manager.createTask(task);
+        manager.deleteTask(task.getId());
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-        assertTrue(loadedManager.getAllTasks().isEmpty());
-        assertTrue(loadedManager.getTask(task.getId()).isEmpty());
+        assertTrue(loadedManager.getTasks().isEmpty());
+        assertTrue(loadedManager.getTaskById(task.getId()).isEmpty());
     }
 
     @Test
     void shouldSaveAndLoadTimeFieldsCorrectly() {
         Epic epic = new Epic("Epic1", "test epic #1");
-        manager.addEpic(epic);
+        manager.createEpic(epic);
 
         Subtask sub = new Subtask("Sub", "desc", TaskStatus.NEW, Duration.ofMinutes(45),
                 LocalDateTime.of(2025, 5, 1, 10, 0), epic.getId());
-        manager.addSubtask(sub);
+        manager.createSubtask(sub);
 
         FileBackedTaskManager loaded = FileBackedTaskManager.loadFromFile(tempFile);
-        Epic loadedEpic = loaded.getEpic(epic.getId()).orElseThrow();
+        Epic loadedEpic = loaded.getEpicById(epic.getId()).orElseThrow();
 
         assertEquals(LocalDateTime.of(2025, 5, 1, 10, 0), loadedEpic.getStartTime());
         assertEquals(LocalDateTime.of(2025, 5, 1, 10, 45), loadedEpic.getEndTime());
@@ -144,10 +144,10 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     @Test
     void shouldLoadEmptyEpicCorrectly() {
         Epic epic = new Epic("Empty Epic", "No subtasks");
-        manager.addEpic(epic);
+        manager.createEpic(epic);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-        Optional<Epic> loadedEpic = loadedManager.getEpic(epic.getId());
+        Optional<Epic> loadedEpic = loadedManager.getEpicById(epic.getId());
 
         assertTrue(loadedEpic.isPresent());
         assertEquals(epic.getName(), loadedEpic.get().getName());

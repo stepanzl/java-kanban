@@ -28,15 +28,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
             bw.write("id,type,name,status,description,duration,startTime,epic");
             bw.newLine();
-            for (Task task : getTasks().values()) {
+            for (Task task : getTasksMap().values()) {
                 bw.write(toString(task));
                 bw.newLine();
             }
-            for (Epic epic : getEpics().values()) {
+            for (Epic epic : getEpicsMap().values()) {
                 bw.write(toString(epic));
                 bw.newLine();
             }
-            for (Subtask subtask : getSubtasks().values()) {
+            for (Subtask subtask : getSubtasksMap().values()) {
                 bw.write(toString(subtask));
                 bw.newLine();
             }
@@ -71,15 +71,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
     private void addTaskByType(Task task) {
         if (task instanceof Epic) {
-            getEpics().put(task.getId(), (Epic) task);
+            getEpicsMap().put(task.getId(), (Epic) task);
         } else if (task instanceof Subtask) {
-            getSubtasks().put(task.getId(), (Subtask) task);
+            getSubtasksMap().put(task.getId(), (Subtask) task);
             int epicId = ((Subtask) task).getEpicId();
-            getEpics().get(epicId).getSubtaskIds().add(task.getId());
+            getEpicsMap().get(epicId).getSubtaskIds().add(task.getId());
             updateEpicStatus(epicId);
             updateEpicTimeFields(epicId);
         } else {
-            getTasks().put(task.getId(), task);
+            getTasksMap().put(task.getId(), task);
         }
     }
 
@@ -125,8 +125,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public void addTask(Task task) {
-        super.addTask(task);
+    public void createTask(Task task) {
+        super.createTask(task);
         save();
     }
 
@@ -149,14 +149,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public void addEpic(Epic epic) {
-        super.addEpic(epic);
+    public void createEpic(Epic epic) {
+        super.createEpic(epic);
         save();
     }
 
     @Override
-    public void addSubtask(Subtask subtask) {
-        super.addSubtask(subtask);
+    public void createSubtask(Subtask subtask) {
+        super.createSubtask(subtask);
         save();
     }
 
@@ -173,20 +173,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public void removeTask(int id) {
-        super.removeTask(id);
+    public void deleteTask(int id) {
+        super.deleteTask(id);
         save();
     }
 
     @Override
-    public void removeEpic(int id) {
-        super.removeEpic(id);
+    public void deleteEpic(int id) {
+        super.deleteEpic(id);
         save();
     }
 
     @Override
-    public void removeSubtask(int id) {
-        super.removeSubtask(id);
+    public void deleteSubtask(int id) {
+        super.deleteSubtask(id);
         save();
     }
 
@@ -198,42 +198,42 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         FileBackedTaskManager manager1 = new FileBackedTaskManager(file);
 
         Task task1 = new Task("Task 1", "test task #1", TaskStatus.NEW);
-        manager1.addTask(task1);
+        manager1.createTask(task1);
         Task task2 = new Task("Task 2", "test task #2", TaskStatus.IN_PROGRESS);
-        manager1.addTask(task2);
+        manager1.createTask(task2);
         Task task3 = new Task("Task 3", "test task #3", TaskStatus.DONE);
-        manager1.addTask(task3);
+        manager1.createTask(task3);
         Epic epic1 = new Epic("Epic 1", "test epic #1");
-        manager1.addEpic(epic1);
+        manager1.createEpic(epic1);
         final int epicId1 = epic1.getId();
         Subtask subtask1 = new Subtask("Subtask1", "test subtask #1", TaskStatus.NEW, epicId1);
-        manager1.addSubtask(subtask1);
+        manager1.createSubtask(subtask1);
         Subtask subtask2 = new Subtask("Subtask2", "test subtask #2", TaskStatus.IN_PROGRESS, epicId1);
-        manager1.addSubtask(subtask2);
+        manager1.createSubtask(subtask2);
         Epic epic2 = new Epic("Epic 2", "test epic #2");
-        manager1.addEpic(epic2);
+        manager1.createEpic(epic2);
 
         FileBackedTaskManager manager2 = FileBackedTaskManager.loadFromFile(file);
 
         System.out.println("=== Tasks ===");
-        manager1.getAllTasks().forEach(System.out::println);
+        manager1.getTasks().forEach(System.out::println);
         System.out.println("--- Loaded ---");
-        manager2.getAllTasks().forEach(System.out::println);
-        System.out.println(manager1.getAllTasks().equals(manager2.getAllTasks()) ? "Tasks match" : "Tasks do not match");
+        manager2.getTasks().forEach(System.out::println);
+        System.out.println(manager1.getTasks().equals(manager2.getTasks()) ? "Tasks match" : "Tasks do not match");
         System.out.println();
 
         System.out.println("=== Epics ===");
-        manager1.getAllEpics().forEach(System.out::println);
+        manager1.getEpics().forEach(System.out::println);
         System.out.println("--- Loaded ---");
-        manager2.getAllEpics().forEach(System.out::println);
-        System.out.println(manager1.getAllEpics().equals(manager2.getAllEpics()) ? "Epics match" : "Epics do not match");
+        manager2.getEpics().forEach(System.out::println);
+        System.out.println(manager1.getEpics().equals(manager2.getEpics()) ? "Epics match" : "Epics do not match");
         System.out.println();
 
         System.out.println("=== Subtasks ===");
-        manager2.getAllSubtasks().forEach(System.out::println);
+        manager2.getSubtasks().forEach(System.out::println);
         System.out.println("--- Loaded ---");
-        manager2.getAllSubtasks().forEach(System.out::println);
-        System.out.println(manager1.getAllSubtasks().equals(manager2.getAllSubtasks()) ? "Subtasks match" : "Subtasks do not match");
+        manager2.getSubtasks().forEach(System.out::println);
+        System.out.println(manager1.getSubtasks().equals(manager2.getSubtasks()) ? "Subtasks match" : "Subtasks do not match");
     }
     */
 

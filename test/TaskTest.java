@@ -20,8 +20,8 @@ class TaskTest {
     void ShouldReturnTrueForEqualsWhenIdsAreSame() {
         Task task1 = new Task("Test task 1", "Test task 1 description", TaskStatus.NEW);
         Task task2 = new Task("Test task 2", "Test task 2 description", TaskStatus.DONE);
-        taskManager.addTask(task1);
-        taskManager.addTask(task2);
+        taskManager.createTask(task1);
+        taskManager.createTask(task2);
 
         task2.setId(task1.getId());
 

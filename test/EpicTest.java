@@ -19,8 +19,8 @@ class EpicTest {
     void ShouldReturnTrueForEqualsWhenIdsAreSame() {
         Epic epic1 = new Epic("Test epic 1", "Test epic 1 description");
         Epic epic2 = new Epic("Test epic 2", "Test epic 2 description");
-        taskManager.addEpic(epic1);
-        taskManager.addEpic(epic2);
+        taskManager.createEpic(epic1);
+        taskManager.createEpic(epic2);
 
         epic2.setId(epic1.getId());
 
