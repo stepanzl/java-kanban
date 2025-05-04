@@ -1,5 +1,6 @@
+import exceptions.ManagerSaveException;
+import exceptions.NotFoundException;
 import manager.FileBackedTaskManager;
-import manager.ManagerSaveException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
@@ -13,7 +14,6 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -68,7 +68,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     }
 
     @Test
-    void shouldLoadMultipleTasksFromFile() {
+    void shouldLoadMultipleTasksFromFile() throws NotFoundException {
         Task task1 = new Task("Task1", "Description1", TaskStatus.NEW);
         Task task2 = new Task("Task2", "Description2", TaskStatus.DONE);
         manager.createTask(task1);
@@ -82,7 +82,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     }
 
     @Test
-    void shouldRestoreSubtaskIdsInEpicsAfterLoadingFromFile() {
+    void shouldRestoreSubtaskIdsInEpicsAfterLoadingFromFile() throws NotFoundException {
         Epic epic = new Epic("Epic1", "Test epic #1");
         manager.createEpic(epic);
 
@@ -121,11 +121,11 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
         assertTrue(loadedManager.getTasks().isEmpty());
-        assertTrue(loadedManager.getTaskById(task.getId()).isEmpty());
+        assertThrows(NotFoundException.class, () -> loadedManager.getTaskById(task.getId()));
     }
 
     @Test
-    void shouldSaveAndLoadTimeFieldsCorrectly() {
+    void shouldSaveAndLoadTimeFieldsCorrectly() throws NotFoundException {
         Epic epic = new Epic("Epic1", "test epic #1");
         manager.createEpic(epic);
 
@@ -142,16 +142,15 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     }
 
     @Test
-    void shouldLoadEmptyEpicCorrectly() {
+    void shouldLoadEmptyEpicCorrectly() throws NotFoundException {
         Epic epic = new Epic("Empty Epic", "No subtasks");
         manager.createEpic(epic);
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-        Optional<Epic> loadedEpic = loadedManager.getEpicById(epic.getId());
+        Epic loadedEpic = loadedManager.getEpicById(epic.getId()).orElseThrow();
 
-        assertTrue(loadedEpic.isPresent());
-        assertEquals(epic.getName(), loadedEpic.get().getName());
-        assertTrue(loadedEpic.get().getSubtaskIds().isEmpty());
+        assertEquals(epic.getName(), loadedEpic.getName());
+        assertTrue(loadedEpic.getSubtaskIds().isEmpty());
     }
 
     @Test

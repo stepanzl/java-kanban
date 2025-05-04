@@ -1,5 +1,6 @@
+import exceptions.NotFoundException;
+import exceptions.TasksOverlapException;
 import manager.TaskManager;
-import manager.TasksOverlapException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
@@ -10,7 +11,6 @@ import tasks.TaskStatus;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,14 +33,13 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void ShouldAddNewTask() {
+    void ShouldAddNewTask() throws NotFoundException {
         Task task = new Task("Test addNewTask", "Test addNewTask description", TaskStatus.NEW);
         manager.createTask(task);
 
-        final Optional<Task> savedTask = manager.getTaskById(task.getId());
+        final Task savedTask = manager.getTaskById(task.getId()).orElseThrow();
 
-        assertTrue(savedTask.isPresent(), "Задача не найдена.");
-        assertEquals(task, savedTask.get(), "Задачи не совпадают.");
+        assertEquals(task, savedTask, "Задачи не совпадают.");
 
         final List<Task> tasks = manager.getTasks();
 
@@ -50,14 +49,13 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void ShouldAddNewEpic() {
+    void ShouldAddNewEpic() throws NotFoundException {
         Epic epic = new Epic("Test addNewEpic", "Test addNewEpic description");
         manager.createEpic(epic);
 
-        final Optional<Epic> savedEpic = manager.getEpicById(epic.getId());
+        final Epic savedEpic = manager.getEpicById(epic.getId()).orElseThrow();
 
-        assertTrue(savedEpic.isPresent(), "Эпик не найден.");
-        assertEquals(epic, savedEpic.get(), "Эпики не совпадают.");
+        assertEquals(epic, savedEpic, "Эпики не совпадают.");
 
         final List<Epic> epics = manager.getEpics();
 
@@ -67,17 +65,16 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void ShouldAddNewSubtask() {
+    void ShouldAddNewSubtask() throws NotFoundException {
         Epic epic = new Epic("Test addNewEpic", "Test addNewEpic description");
         manager.createEpic(epic);
         Subtask subtask = new Subtask("Test addNewSubtask", "Test addNewSubtask description",
                 TaskStatus.NEW, epic.getId());
         manager.createSubtask(subtask);
 
-        final Optional<Subtask> savedSubtask = manager.getSubtaskById(subtask.getId());
+        final Subtask savedSubtask = manager.getSubtaskById(subtask.getId()).orElseThrow();
 
-        assertTrue(savedSubtask.isPresent(), "Подзадача не найдена.");
-        assertEquals(subtask, savedSubtask.get(), "Подзадачи не совпадают.");
+        assertEquals(subtask, savedSubtask, "Подзадачи не совпадают.");
 
         final List<Subtask> subtasks = manager.getSubtasks();
 
@@ -85,11 +82,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(1, subtasks.size(), "Неверное количество подзадач.");
         assertEquals(subtask, subtasks.getFirst(), "Подзадачи не совпадают.");
 
-        Optional<Epic> epicOpt = manager.getEpicById(epic.getId());
-        assertTrue(epicOpt.isPresent());
-        assertEquals(1, epicOpt.get().getSubtaskIds().size(),
+        Epic epicFromManager = manager.getEpicById(epic.getId()).orElseThrow();
+        assertEquals(1, epicFromManager.getSubtaskIds().size(),
                 "Неверное количество Id подзадач в эпике.");
-        assertEquals(subtask.getId(), epicOpt.get().getSubtaskIds().getFirst(),
+        assertEquals(subtask.getId(), epicFromManager.getSubtaskIds().getFirst(),
                 "Id подзадачи не совпадают.");
     }
 
@@ -108,7 +104,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void ShouldNotChangeWhenAddedToManager() {
+    void ShouldNotChangeWhenAddedToManager() throws NotFoundException {
         Task task = new Task("Test addNewTask", "Test addNewTask description", TaskStatus.NEW);
         manager.createTask(task);
 
@@ -121,7 +117,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void ShouldNotChangeIdWhenAddedToManager() {
+    void ShouldNotChangeIdWhenAddedToManager() throws NotFoundException {
         Task task = new Task("Test task 1", "Test task 1 description", TaskStatus.NEW);
         manager.createTask(task);
         int taskId = task.getId();
@@ -133,7 +129,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void ShouldNotUpdateTaskInHistoryWhenUpdatedInManager() {
+    void ShouldNotUpdateTaskInHistoryWhenUpdatedInManager() throws NotFoundException {
         Task task = new Task("Test task", "Test task description", TaskStatus.NEW);
         manager.createTask(task);
         manager.getTaskById(task.getId()); // при вызове getTaskById задача добавится в historyManager
@@ -146,7 +142,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void ShouldRemoveCorrectTaskById() {
+    void ShouldRemoveCorrectTaskById() throws NotFoundException {
         Task task1 = new Task("Test task #1", "Test task #1 description", TaskStatus.NEW);
         manager.createTask(task1);
         Task task2 = new Task("Test task #2", "Test task #2 description", TaskStatus.NEW);
@@ -164,11 +160,11 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(2, tasks.size(), "Задача не была удалена");
         assertEquals(task1, tasks.get(0), "Задача #1 не должна быть удалена");
         assertEquals(task3, tasks.get(1), "Задача #3 не должна быть удалена");
-        assertTrue(manager.getTaskById(task2.getId()).isEmpty(), "Задача #2 должна быть удалена");
+        assertThrows(NotFoundException.class, () -> manager.getTaskById(task2.getId()));
     }
 
     @Test
-    void ShouldRemoveAllTasks() {
+    void ShouldRemoveAllTasks() throws NotFoundException {
         Task task1 = new Task("Test task #1", "Test task #1 description", TaskStatus.NEW);
         manager.createTask(task1);
         manager.getTaskById(task1.getId());
@@ -185,13 +181,13 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         assertEquals(0, tasks.size(), "Задачи не были удалены");
         assertEquals(0, historyList.size(), "Просмотры в истории не были удалены");
-        assertTrue(manager.getTaskById(task1.getId()).isEmpty(), "Задача #1 должна быть удалена");
-        assertTrue(manager.getTaskById(task2.getId()).isEmpty(), "Задача #2 должна быть удалена");
-        assertTrue(manager.getTaskById(task3.getId()).isEmpty(), "Задача #3 должна быть удалена");
+        assertThrows(NotFoundException.class, () -> manager.getTaskById(task1.getId()));
+        assertThrows(NotFoundException.class, () -> manager.getTaskById(task2.getId()));
+        assertThrows(NotFoundException.class, () -> manager.getTaskById(task3.getId()));
     }
 
     @Test
-    void ShouldDeleteEpicAndAllItsSubtasks() {
+    void ShouldDeleteEpicAndAllItsSubtasks() throws NotFoundException {
         Epic epic = new Epic("Test Epic", "Test Epic description");
         manager.createEpic(epic);
         manager.getEpicById(epic.getId());
@@ -206,13 +202,13 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         manager.deleteEpic(epic.getId());
 
-        assertTrue(manager.getEpicById(epic.getId()).isEmpty(), "Эпик должен быть удален");
-        assertTrue(manager.getSubtaskById(subtask1.getId()).isEmpty(), "Подзадача #1 должна быть удалена");
-        assertTrue(manager.getSubtaskById(subtask2.getId()).isEmpty(), "Подзадача #2 должна быть удалена");
+        assertThrows(NotFoundException.class, () -> manager.getEpicById(epic.getId()));
+        assertThrows(NotFoundException.class, () -> manager.getSubtaskById(subtask1.getId()));
+        assertThrows(NotFoundException.class, () -> manager.getSubtaskById(subtask2.getId()));
     }
 
     @Test
-    void ShouldRemoveAllEpicsAndTheirsSubtasks() {
+    void ShouldRemoveAllEpicsAndTheirsSubtasks() throws NotFoundException {
         Epic epic1 = new Epic("Epic1", "test epic #1");
         manager.createEpic(epic1);
         manager.getEpicById(epic1.getId());
@@ -238,7 +234,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void removeAllSubtasks() {
+    void removeAllSubtasks() throws NotFoundException {
         Epic epic1 = new Epic("Epic1", "test epic #1");
         manager.createEpic(epic1);
         manager.getEpicById(epic1.getId());
@@ -261,12 +257,12 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(2, epics.size(), "Эпики не должны быть удалены");
         assertEquals(0, subtasks.size(), "Подзадачи не были удалены");
         assertEquals(2, historyList.size(), "Просмотры подзадач в истории не были удалены");
-        assertTrue(manager.getSubtaskById(subtask1.getId()).isEmpty(), "Подзадача #1 должна быть удалена");
-        assertTrue(manager.getSubtaskById(subtask2.getId()).isEmpty(), "Подзадача #2 должна быть удалена");
+        assertThrows(NotFoundException.class, () -> manager.getSubtaskById(subtask1.getId()));
+        assertThrows(NotFoundException.class, () -> manager.getSubtaskById(subtask2.getId()));
     }
 
     @Test
-    void epicTimeFieldsShouldBeCalculatedFromSubtasks() {
+    void epicTimeFieldsShouldBeCalculatedFromSubtasks() throws NotFoundException {
         Epic epic = new Epic("Epic1", "test epic #1");
         manager.createEpic(epic);
 
@@ -287,7 +283,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void epicTimeFieldsShouldBeNullIfNoSubtasks() {
+    void epicTimeFieldsShouldBeNullIfNoSubtasks() throws NotFoundException {
         Epic epic = new Epic("Epic1", "test epic #1");
         manager.createEpic(epic);
 
@@ -299,7 +295,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void updatingSubtaskShouldRecalculateEpicTimeFields() {
+    void updatingSubtaskShouldRecalculateEpicTimeFields() throws NotFoundException {
         Epic epic = new Epic("Epic", "desc");
         manager.createEpic(epic);
 
@@ -318,7 +314,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void deletingLastSubtaskShouldResetEpicTimeFields() {
+    void deletingLastSubtaskShouldResetEpicTimeFields() throws NotFoundException {
         Epic epic = new Epic("Epic", "desc");
         manager.createEpic(epic);
 
@@ -335,7 +331,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void deletingEpicShouldAlsoDeleteSubtasks() {
+    void deletingEpicShouldAlsoDeleteSubtasks() throws NotFoundException {
         Epic epic = new Epic("Epic", "desc");
         manager.createEpic(epic);
 
@@ -346,11 +342,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         manager.deleteEpic(epic.getId());
 
-        assertTrue(manager.getSubtaskById(sub1.getId()).isEmpty());
-        assertTrue(manager.getSubtaskById(sub2.getId()).isEmpty());
+        assertThrows(NotFoundException.class, () -> manager.getSubtaskById(sub1.getId()));
+        assertThrows(NotFoundException.class, () -> manager.getSubtaskById(sub2.getId()));
         assertTrue(manager.getSubtasks().isEmpty(), "Все подзадачи должны быть удалены");
     }
-
 
     @Test
     void shouldNotCreateSubtaskWithNonexistentEpic() {
@@ -365,7 +360,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void epicStatusShouldReflectSubtasksStatus() {
+    void epicStatusShouldReflectSubtasksStatus() throws NotFoundException {
         Epic epic = new Epic("Status Epic", "Testing status calculation");
         manager.createEpic(epic);
 
@@ -437,5 +432,50 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertFalse(prioritized.contains(task3), "Задача без времени не должна быть в списке");
         assertEquals(List.of(task2, task1), prioritized,
                 "Задачи должны быть отсортированы по времени начала");
+    }
+
+    @Test
+    void ShouldNotFindDeletedTask() {
+        Task task = new Task("Test task", "Test task description", TaskStatus.NEW);
+        manager.createTask(task);
+        int taskId = task.getId();
+        manager.deleteTask(taskId);
+
+        assertThrows(NotFoundException.class, () -> manager.getTaskById(taskId));
+    }
+
+    @Test
+    void ShouldThrowWhenGettingNonExistentTask() {
+        assertThrows(NotFoundException.class, () -> manager.getTaskById(999));
+    }
+
+    @Test
+    void ShouldThrowWhenGettingNonExistentEpic() {
+        assertThrows(NotFoundException.class, () -> manager.getEpicById(999));
+    }
+
+    @Test
+    void ShouldThrowWhenGettingNonExistentSubtask() {
+        assertThrows(NotFoundException.class, () -> manager.getSubtaskById(999));
+    }
+
+    @Test
+    void ShouldThrowWhenDeletingNonExistentTask() {
+        assertThrows(NotFoundException.class, () -> manager.deleteTask(999));
+    }
+
+    @Test
+    void ShouldThrowWhenDeletingNonExistentEpic() {
+        assertThrows(NotFoundException.class, () -> manager.deleteEpic(999));
+    }
+
+    @Test
+    void ShouldThrowWhenDeletingNonExistentSubtask() {
+        assertThrows(NotFoundException.class, () -> manager.deleteSubtask(999));
+    }
+
+    @Test
+    void ShouldThrowWhenGettingSubtasksOfNonExistentEpic() {
+        assertThrows(NotFoundException.class, () -> manager.getEpicSubtasks(999));
     }
 }

@@ -1,5 +1,6 @@
 package manager;
 
+import exceptions.ManagerSaveException;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
@@ -189,52 +190,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         super.deleteSubtask(id);
         save();
     }
-
-    /*
-        public static void main(String[] args) {
-        File file = new File("tasks.csv");
-        file.deleteOnExit();
-
-        FileBackedTaskManager manager1 = new FileBackedTaskManager(file);
-
-        Task task1 = new Task("Task 1", "test task #1", TaskStatus.NEW);
-        manager1.createTask(task1);
-        Task task2 = new Task("Task 2", "test task #2", TaskStatus.IN_PROGRESS);
-        manager1.createTask(task2);
-        Task task3 = new Task("Task 3", "test task #3", TaskStatus.DONE);
-        manager1.createTask(task3);
-        Epic epic1 = new Epic("Epic 1", "test epic #1");
-        manager1.createEpic(epic1);
-        final int epicId1 = epic1.getId();
-        Subtask subtask1 = new Subtask("Subtask1", "test subtask #1", TaskStatus.NEW, epicId1);
-        manager1.createSubtask(subtask1);
-        Subtask subtask2 = new Subtask("Subtask2", "test subtask #2", TaskStatus.IN_PROGRESS, epicId1);
-        manager1.createSubtask(subtask2);
-        Epic epic2 = new Epic("Epic 2", "test epic #2");
-        manager1.createEpic(epic2);
-
-        FileBackedTaskManager manager2 = FileBackedTaskManager.loadFromFile(file);
-
-        System.out.println("=== Tasks ===");
-        manager1.getTasks().forEach(System.out::println);
-        System.out.println("--- Loaded ---");
-        manager2.getTasks().forEach(System.out::println);
-        System.out.println(manager1.getTasks().equals(manager2.getTasks()) ? "Tasks match" : "Tasks do not match");
-        System.out.println();
-
-        System.out.println("=== Epics ===");
-        manager1.getEpics().forEach(System.out::println);
-        System.out.println("--- Loaded ---");
-        manager2.getEpics().forEach(System.out::println);
-        System.out.println(manager1.getEpics().equals(manager2.getEpics()) ? "Epics match" : "Epics do not match");
-        System.out.println();
-
-        System.out.println("=== Subtasks ===");
-        manager2.getSubtasks().forEach(System.out::println);
-        System.out.println("--- Loaded ---");
-        manager2.getSubtasks().forEach(System.out::println);
-        System.out.println(manager1.getSubtasks().equals(manager2.getSubtasks()) ? "Subtasks match" : "Subtasks do not match");
-    }
-    */
 
 }
