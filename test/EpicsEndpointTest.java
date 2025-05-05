@@ -1,9 +1,11 @@
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
+import tasks.TaskStatus;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,7 +41,7 @@ public class EpicsEndpointTest extends BaseHttpTest {
         taskManager.createEpic(epic);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(EPIC_URL + "/0"))
+                .uri(URI.create(EPIC_URL + "/1"))
                 .GET()
                 .build();
 
@@ -68,12 +70,36 @@ public class EpicsEndpointTest extends BaseHttpTest {
         taskManager.createEpic(epic);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(EPIC_URL + "/0"))
+                .uri(URI.create(EPIC_URL + "/1"))
                 .DELETE()
                 .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(200, response.statusCode());
         assertTrue(taskManager.getEpics().isEmpty());
+    }
+
+    @Test
+    public void testUpdateEpic_returns200AndUpdatesEpic() throws Exception {
+        Epic epic = new Epic("Test epic", "Description");
+        taskManager.createEpic(epic);
+
+        Epic updatedEpic = new Epic(epic.getId(), "Updated epic", "Updated description",
+                TaskStatus.DONE, Duration.ZERO, null);
+        String json = gson.toJson(updatedEpic);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(EPIC_URL))
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, response.statusCode());
+
+        Epic result = gson.fromJson(response.body(), Epic.class);
+        assertNotNull(result);
+        assertEquals("Updated epic", result.getName());
+        assertEquals("Updated description", result.getDescription());
+        assertEquals(TaskStatus.DONE, result.getStatus());
     }
 }

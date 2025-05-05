@@ -48,7 +48,8 @@ public class EpicsHandler extends BaseHttpHandler {
                         taskManager.createEpic(epic);
                         sendJson(exchange, epic, 201);
                     } else {
-                        sendText(exchange, "Метод не поддерживается", 405);
+                        taskManager.updateEpic(epic);
+                        sendJson(exchange, epic, 200);
                     }
                 } catch (TasksOverlapException e) {
                     sendHasInteractions(exchange);

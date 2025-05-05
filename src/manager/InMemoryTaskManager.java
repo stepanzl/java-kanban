@@ -26,7 +26,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     private final Map<Integer, Subtask> subtasks = new HashMap<>();
 
-    private Integer idCount = 0;
+    private Integer idCount = 1;
 
     private final HistoryManager historyManager = Managers.getDefaultHistory();
 
@@ -198,6 +198,21 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
+    public void updateEpic(Epic epic) {
+        Epic epicToUpdate = new Epic(epic);
+        Epic oldEpic = epics.get(epic.getId());
+        if (oldEpic != null) {
+            prioritizedTasks.remove(oldEpic);
+        }
+        epicToUpdate.setId(epic.getId());
+        epics.put(epicToUpdate.getId(), epicToUpdate);
+        updateEpicStatus(epicToUpdate.getId());
+        updateEpicTimeFields(epicToUpdate.getId());
+
+        log("Обновлён эпик ID=" + epicToUpdate.getId() + ": " + epicToUpdate.getName());
+    }
+
+    @Override
     public void deleteTask(int id) throws NotFoundException {
         Task task = tasks.get(id);
         if (task == null) {
@@ -297,7 +312,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtaskList.isEmpty()) {
             epic.setStartTime(null);
             epic.setEndTime(null);
-            epic.setDuration(Duration.ZERO); // ← Duration.ZERO вместо null
+            epic.setDuration(Duration.ZERO);
             return;
         }
 
@@ -355,7 +370,4 @@ public class InMemoryTaskManager implements TaskManager {
         return getPrioritizedTasks().stream()
                 .anyMatch(existingTask -> !existingTask.equals(newTask) && isOverlapping(existingTask, newTask));
     }
-
 }
-
-

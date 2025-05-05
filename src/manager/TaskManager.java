@@ -48,4 +48,5 @@ public interface TaskManager {
 
     void removeAllSubtasks();
 
+    void updateEpic(Epic epic);
 }

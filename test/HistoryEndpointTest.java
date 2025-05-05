@@ -20,7 +20,7 @@ public class HistoryEndpointTest extends BaseHttpTest {
         Task task = new Task("Task 1", "Desc", TaskStatus.NEW,
                 Duration.ofMinutes(10), LocalDateTime.now());
         taskManager.createTask(task);
-        taskManager.getTaskById(0); // Добавляем в историю
+        taskManager.getTaskById(1); // Добавляем в историю
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(HISTORY_URL))

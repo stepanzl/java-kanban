@@ -2,6 +2,7 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
+import exceptions.NotFoundException;
 import exceptions.TasksOverlapException;
 import manager.TaskManager;
 import tasks.Subtask;
@@ -33,6 +34,14 @@ public class SubtasksHandler extends BaseHttpHandler {
                         Subtask subtask = taskManager.getSubtaskById(id).orElseThrow();
                         sendJson(exchange, subtask, 200);
                     } catch (Exception e) {
+                        sendNotFound(exchange);
+                    }
+                } else if (path.matches(".*/subtasks/epic/\\d+")) {
+                    try {
+                        int epicId = extractIdFromPath(path);
+                        List<Subtask> epicSubtasks = taskManager.getEpicSubtasks(epicId);
+                        sendJson(exchange, epicSubtasks, 200);
+                    } catch (NotFoundException e) {
                         sendNotFound(exchange);
                     }
                 } else {

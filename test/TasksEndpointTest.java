@@ -45,7 +45,7 @@ public class TasksEndpointTest extends BaseHttpTest {
         taskManager.createTask(task);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(TASK_URL + "/0"))
+                .uri(URI.create(TASK_URL + "/1"))
                 .GET()
                 .build();
 
@@ -75,7 +75,7 @@ public class TasksEndpointTest extends BaseHttpTest {
         taskManager.createTask(task);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(TASK_URL + "/0"))
+                .uri(URI.create(TASK_URL + "/1"))
                 .DELETE()
                 .build();
 
