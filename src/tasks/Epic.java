@@ -21,7 +21,9 @@ public class Epic extends Task {
 
     public Epic(Epic other) {
         super(other);
-        this.subtaskIds.addAll(other.subtaskIds);
+        if (other.subtaskIds != null) {
+            this.subtaskIds.addAll(other.subtaskIds);
+        }
     }
 
     public List<Integer> getSubtaskIds() {
